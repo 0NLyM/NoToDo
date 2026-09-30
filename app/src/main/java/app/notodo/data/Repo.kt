@@ -68,7 +68,7 @@ class Repo(
     }
 
     /** Modifica dall'editor: se cambiano data o avvisi, il calcolo degli avvisi riparte da adesso. */
-    suspend fun update(new: Item) = edit(new.id, "modificato") { old ->
+    suspend fun update(new: Item, action: String = "modificato") = edit(new.id, action) { old ->
         val timing = old.at != new.at || old.alerts != new.alerts
         new.copy(firedUpTo = if (timing) clock() else old.firedUpTo, snoozeUntil = if (timing) null else old.snoozeUntil)
     }
@@ -80,11 +80,6 @@ class Repo(
     /** Snooze: silenzia gli avvisi fino a [until] e ne manda uno solo allora. La scadenza non cambia. */
     suspend fun snooze(id: String, until: Long) = edit(id, "avviso rimandato", { _, _ -> "a ${stamp(until)}" }) {
         it.copy(snoozeUntil = until, firedUpTo = until - 1)
-    }
-
-    /** Spostare la scadenza è un'azione diversa dallo snooze: cambia `at`. */
-    suspend fun moveDue(id: String, at: Long) = edit(id, "scadenza spostata") {
-        it.copy(at = at, firedUpTo = clock(), snoozeUntil = null)
     }
 
     suspend fun markSeen(id: String) = dao.item(id)?.let { dao.upsert(it.copy(seenAt = clock())) }

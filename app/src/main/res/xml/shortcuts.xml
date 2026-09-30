@@ -1,0 +1,27 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="capture"
+        android:shortcutLongLabel="@string/shortcut_capture_long"
+        android:shortcutShortLabel="@string/shortcut_capture">
+        <intent
+            android:action="app.notodo.CAPTURE"
+            android:targetClass="app.notodo.ui.CaptureActivity"
+            android:targetPackage="app.notodo">
+            <extra android:name="source" android:value="scorciatoia" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="inbox"
+        android:shortcutShortLabel="@string/shortcut_inbox">
+        <intent
+            android:action="app.notodo.VIEW.INBOX"
+            android:targetClass="app.notodo.ui.MainActivity"
+            android:targetPackage="app.notodo">
+            <extra android:name="view" android:value="INBOX" />
+        </intent>
+    </shortcut>
+</shortcuts>

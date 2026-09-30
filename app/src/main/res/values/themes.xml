@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.NoToDo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+    </style>
+
+    <!-- Cattura e «Rimanda…»: finestra trasparente sopra l'app corrente -->
+    <style name="Theme.NoToDo.Overlay">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+    </style>
+</resources>

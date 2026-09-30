@@ -1,0 +1,11 @@
+<!--
+  recognitionService è obbligatorio per il parser di sistema (VoiceInteractionServiceInfo),
+  ma da Android 12 non viene usato come riconoscitore vocale predefinito: NoToDo non registra
+  alcun servizio di riconoscimento e non usa il microfono. Non selezionarlo come «Input vocale».
+-->
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:recognitionService="app.notodo.assist.AssistSessionService"
+    android:sessionService="app.notodo.assist.AssistSessionService"
+    android:settingsActivity="app.notodo.ui.MainActivity"
+    android:supportsAssist="true"
+    android:supportsLaunchVoiceAssistFromKeyguard="false" />

@@ -26,7 +26,7 @@ interface Dao {
     @Query("SELECT MIN(nextAlertAt) FROM item") suspend fun nextAlert(): Long?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insert(a: Audit)
-    @Query("SELECT * FROM audit WHERE itemId = :itemId ORDER BY at DESC") fun audit(itemId: String): Flow<List<Audit>>
+    @Query("SELECT * FROM audit WHERE itemId = :itemId ORDER BY at DESC, rowid DESC") fun audit(itemId: String): Flow<List<Audit>>
     @Query("DELETE FROM audit WHERE itemId = :itemId") suspend fun deleteAudit(itemId: String)
 
     @Query("SELECT * FROM capture") suspend fun allCaptures(): List<Capture>

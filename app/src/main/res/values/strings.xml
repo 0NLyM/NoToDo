@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">NoToDo</string>
+    <string name="capture_label">Cattura rapida</string>
+    <string name="share_label">Salva in NoToDo</string>
+    <string name="shortcut_capture">Cattura</string>
+    <string name="shortcut_capture_long">Nuova cattura</string>
+    <string name="shortcut_inbox">Inbox</string>
+    <string name="widget_label">NoToDo · Prossimi</string>
+    <string name="widget_description">Prossime scadenze e pulsante di cattura</string>
+    <string name="widget_header">PROSSIMI</string>
+    <string name="widget_empty">Nessuna scadenza</string>
+    <string name="widget_capture">Nuova cattura</string>
+</resources>
