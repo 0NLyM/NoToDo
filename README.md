@@ -56,6 +56,10 @@ keytool -genkeypair -v -keystore notodo.jks -alias notodo -keyalg RSA -keysize 4
 $ANDROID_HOME/build-tools/37.0.0/apksigner sign --ks notodo.jks --out notodo.apk app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
+### Rilasci
+
+Le release si pubblicano con il workflow manuale *Actions › Release › Run workflow* (tag es. `v0.1.0-alpha01`, note in `docs/release/<tag>.md`). Prima volta: aggiungi in *Settings › Secrets and variables › Actions* i secret `NOTODO_KEYSTORE_B64` (il keystore in base64) e `NOTODO_KEYSTORE_PASSWORD`. Il workflow esegue i test, firma con quella chiave e allega l'APK. La chiave non sta nel repository: senza la stessa chiave gli aggiornamenti non si installano sopra la versione esistente.
+
 ## Configurazione sul Nothing Phone (3)
 
 1. **Notifiche**: vengono chieste al primo salvataggio con avvisi; in alternativa NoToDo › Impostazioni › *Affidabilità dei promemoria*.
