@@ -72,8 +72,14 @@ val Geist = FontFamily(
     listOf(400, 500, 600, 700).map { w -> Font(R.font.geist, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w))) },
 )
 
-/** Titoli: Doto (OFL), matrice di punti. */
-val Dots = FontFamily(Font(R.font.doto, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))))
+/** Titoli: Doto (OFL), matrice di punti con angoli arrotondati (asse ROND al massimo: punti rotondi). */
+val Dots = FontFamily(
+    Font(
+        R.font.doto,
+        FontWeight.ExtraBold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(800), FontVariation.Setting("ROND", 100f)),
+    ),
+)
 
 private val typography = Typography().run {
     fun TextStyle.body() = copy(fontFamily = Geist)
