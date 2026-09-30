@@ -196,7 +196,7 @@ Limiti dei test: nessuna interfaccia di sistema reale (tasto power, SystemUI, IM
 
 ## Font
 
-Testo in [Geist](https://github.com/vercel/geist-font), titoli in [Doto](https://github.com/oliverlalan/Doto), entrambi SIL Open Font License (`docs/licenses`). NDot di Nothing non è incluso perché proprietario: per cambiare il font dei titoli basta sostituire `app/src/main/res/font/doto.ttf`.
+Testo in [Geist](https://fonts.google.com/specimen/Geist), titoli in [Doto](https://fonts.google.com/specimen/Doto), entrambi SIL Open Font License (`docs/licenses`). NDot di Nothing non è incluso perché proprietario: per cambiare il font dei titoli basta sostituire `app/src/main/res/font/doto.ttf`.
 
 ## Privacy
 
