@@ -196,7 +196,7 @@ Limiti dei test: nessuna interfaccia di sistema reale (tasto power, SystemUI, IM
 
 ## Font
 
-Testo in [Geist](https://fonts.google.com/specimen/Geist), titoli in [Doto](https://fonts.google.com/specimen/Doto), entrambi SIL Open Font License (`docs/licenses`). NDot di Nothing non è incluso perché proprietario: per cambiare il font dei titoli basta sostituire `app/src/main/res/font/doto.ttf`.
+Testo in [Geist](https://fonts.google.com/specimen/Geist), titoli in [Doto](https://fonts.google.com/specimen/Doto), entrambi SIL Open Font License (`docs/licenses`). NDot di Nothing non è incluso perché proprietario: per l'effetto punti rotondi simile a NDot si usa l'asse variabile `ROND` di Doto impostato a 100 (stesso file `doto.ttf`, nessuna licenza aggiuntiva); per cambiare il font dei titoli basta sostituire `app/src/main/res/font/doto.ttf` e regolare `'ROND'` in `Theme.kt` e `res/font/titoli.xml`.
 
 ## Privacy
 
