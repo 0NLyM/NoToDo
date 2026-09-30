@@ -23,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ellipsize="end"
+        android:fontFamily="@font/geist"
         android:maxLines="1"
         android:textColor="@color/text"
         android:textSize="15sp" />

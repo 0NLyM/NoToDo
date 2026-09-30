@@ -50,7 +50,11 @@ private fun trim(text: String, r: IntRange): IntRange {
     return s until e
 }
 
-private const val U = "(?U)"
+/**
+ * Classi \w e \b Unicode (lettere accentate). Su Android il motore ICU lo fa già e non accetta il flag
+ * `(?U)`, che farebbe fallire ogni analisi; sulla JVM dei test serve.
+ */
+private val U = if (System.getProperty("java.vm.name") == "Dalvik") "" else "(?U)"
 private val NUMW = mapOf(
     "un" to 1, "uno" to 1, "una" to 1, "due" to 2, "tre" to 3, "quattro" to 4, "cinque" to 5, "sei" to 6,
     "sette" to 7, "otto" to 8, "nove" to 9, "dieci" to 10, "undici" to 11, "dodici" to 12, "quindici" to 15,
@@ -100,19 +104,19 @@ private val M_TASK = Regex("$U^(?:(?:ricordami|ricordatemi|ricordati|ricorda|ric
 private val M_VERIFY = Regex("$U\\b(?:da\\s+verificare|da\\s+confermare|da\\s+controllare|non\\s+sono\\s+sicur[oa]|non\\s+so\\s+se|forse|credo\\s+che|mi\\s+sembra\\s+che|mi\\s+pare\\s+che|penso\\s+che|dovrebbe\\s+essere)\\b|\\?[ \\t]*$")
 private val EVENT_VERBS = setOf("incontra", "incontrare", "vedi", "vedere")
 private val EVENT_WORDS = Regex("$U\\b(?:incontr[aoi]|incontrare|riunione|meeting|appuntamento|call|videochiamata|visita|dentista|medico|colloquio|cena|pranzo|aperitivo|compleanno|evento|webinar|conferenza|esame|volo|treno|concerto|partita|intervento)\\b")
-private val TECH = Regex("(?U)\\b(?:[A-Z]{2,}[A-Z0-9-]*|\\d+(?:[.,:/-]\\d+)*|\\p{L}+\\d+\\w*|\\d+\\p{L}+\\w*)\\b|\\S+@\\S+\\.\\w+|https?://\\S+|www\\.\\S+")
-private val HASHTAG = Regex("(?U)#(\\w[\\w-]*)")
-private val MENTION = Regex("(?U)(?<![\\w.])@(\\w+)")
-private val AT_SIGN = Regex("(?U)(?<![\\w.])@(?=\\w)")
+private val TECH = Regex("$U\\b(?:[A-Z]{2,}[A-Z0-9-]*|\\d+(?:[.,:/-]\\d+)*|\\p{L}+\\d+\\w*|\\d+\\p{L}+\\w*)\\b|\\S+@\\S+\\.\\w+|https?://\\S+|www\\.\\S+")
+private val HASHTAG = Regex("$U#(\\w[\\w-]*)")
+private val MENTION = Regex("$U(?<![\\w.])@(\\w+)")
+private val AT_SIGN = Regex("$U(?<![\\w.])@(?=\\w)")
 private val PERSON = Regex(
-    "(?U)(?i:\\b(?:chiama(?:re)?|richiama(?:re)?|telefona(?:re)?|scrivi|scrivere|manda(?:re)?|invia(?:re)?|incontra(?:re)?|vedi|vedere|senti|sentire|avvisa(?:re)?|chiedi|chiedere|contatta(?:re)?|sollecita(?:re)?|ricorda(?:re)?|dire|con|a|ad|da|per|parlato\\s+con|detto\\s+a|dott|dottor|dottoressa|dr|ing|sig|signor|signora|avv|prof|geom)\\.?\\s+(?:a\\s+|ad\\s+)?)" +
+    "$U(?i:\\b(?:chiama(?:re)?|richiama(?:re)?|telefona(?:re)?|scrivi|scrivere|manda(?:re)?|invia(?:re)?|incontra(?:re)?|vedi|vedere|senti|sentire|avvisa(?:re)?|chiedi|chiedere|contatta(?:re)?|sollecita(?:re)?|ricorda(?:re)?|dire|con|a|ad|da|per|parlato\\s+con|detto\\s+a|dott|dottor|dottoressa|dr|ing|sig|signor|signora|avv|prof|geom)\\.?\\s+(?:a\\s+|ad\\s+)?)" +
         "(\\p{Lu}\\p{Ll}+(?:\\s+\\p{Lu}\\p{Ll}+)?)"
 )
-private val WORD = Regex("(?U)\\p{L}+")
-private val SECONDARY = Regex("(?U)\\s*(?:,|\\.(?=\\s)|\\s-\\s|\\b(?:e\\s+poi|ed|e|poi|quindi|inoltre|anche)\\b)\\s*")
-private val CONJ_END = Regex("(?U)(?:^|\\s)(?:e|ed|poi|quindi|inoltre|anche|infine|dopo)$")
-private val EDGE_START = Regex("(?U)^(?:[\\s,;:.\\-–—]+|(?:e|ed|poi|quindi|anche)\\s+)+")
-private val EDGE_END = Regex("(?U)(?:[\\s,;:.\\-–—]+|\\s+(?:e|ed|di|del|della|a|al|alla|per|entro|il|la|lo|con|da|ore))+$")
+private val WORD = Regex("$U\\p{L}+")
+private val SECONDARY = Regex("$U\\s*(?:,|\\.(?=\\s)|\\s-\\s|\\b(?:e\\s+poi|ed|e|poi|quindi|inoltre|anche)\\b)\\s*")
+private val CONJ_END = Regex("$U(?:^|\\s)(?:e|ed|poi|quindi|inoltre|anche|infine|dopo)$")
+private val EDGE_START = Regex("$U^(?:[\\s,;:.\\-–—]+|(?:e|ed|poi|quindi|anche)\\s+)+")
+private val EDGE_END = Regex("$U(?:[\\s,;:.\\-–—]+|\\s+(?:e|ed|di|del|della|a|al|alla|per|entro|il|la|lo|con|da|ore))+$")
 private val ABBREV = setOf("sig", "sigg", "dott", "dr", "ing", "avv", "prof", "geom", "rag", "arch", "es", "ecc", "pag", "n", "nr", "tel", "cell", "ca", "v", "fig", "art", "vol")
 private val NOT_NAMES = (WEEKDAY_NAMES + WEEKDAY_NAMES.map { it.replace('ì', 'i') } + MONTH_RE.split('|') +
     listOf("oggi", "domani", "dopodomani", "ieri", "stasera")).toSet()
@@ -234,7 +238,7 @@ private class Analysis(val text: String, val ctx: ParseContext) {
         if (heads.size < 2) return listOf(seg)
         val bounds = heads.zipWithNext { a, b ->
             val between = lower.substring(a.range.last + 1, b.range.first)
-            val conj = Regex("(?U)(?:,|\\s(?:e\\s+poi|ed|e|poi|quindi|inoltre|infine))\\s*$").find(between)
+            val conj = Regex("$U(?:,|\\s(?:e\\s+poi|ed|e|poi|quindi|inoltre|infine))\\s*$").find(between)
             val w = ws.lastOrNull { it.start > a.range.last && it.end <= b.range.first && lower.substring(it.end, b.range.first).isBlank() }
             when {
                 conj != null -> (a.range.last + 1 + conj.range.first) to b.range.first
@@ -254,7 +258,7 @@ private class Analysis(val text: String, val ctx: ParseContext) {
     private fun atHead(p: Int, segStart: Int): Boolean {
         val before = lower.substring(segStart, p).trimEnd()
         return before.isEmpty() || before.endsWith(",") || CONJ_END.containsMatchIn(before) ||
-            before.endsWith("di") && Regex("(?U)\\bricorda(?:mi|ti)?\\s+di$").containsMatchIn(before) ||
+            before.endsWith("di") && Regex("$U\\bricorda(?:mi|ti)?\\s+di$").containsMatchIn(before) ||
             whens.any { it.end in segStart..p && lower.substring(it.end, p).isBlank() }
     }
 

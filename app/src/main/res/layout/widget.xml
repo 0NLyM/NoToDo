@@ -17,12 +17,12 @@
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:fontFamily="monospace"
+            android:fontFamily="@font/titoli"
             android:gravity="center_vertical"
-            android:letterSpacing="0.12"
+            android:letterSpacing="0.06"
             android:text="@string/widget_header"
-            android:textColor="@color/text2"
-            android:textSize="12sp" />
+            android:textColor="@color/text"
+            android:textSize="16sp" />
 
         <ImageButton
             android:id="@+id/capture"
@@ -43,6 +43,7 @@
         android:id="@+id/empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/geist"
         android:text="@string/widget_empty"
         android:textColor="@color/text2"
         android:textSize="14sp"

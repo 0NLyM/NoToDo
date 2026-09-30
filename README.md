@@ -194,6 +194,10 @@ Limiti dei test: nessuna interfaccia di sistema reale (tasto power, SystemUI, IM
 - `targetSdk 36` (Android 16, il sistema del Phone (3)); `compileSdk 37` perché richiesto da AndroidX.
 - Il parser non ha modelli locali o LLM: nessuno è stato misurato sul dispositivo, quindi non ne viene dichiarato alcuno.
 
+## Font
+
+Testo in [Geist](https://github.com/vercel/geist-font), titoli in [Doto](https://github.com/oliverlalan/Doto), entrambi SIL Open Font License (`docs/licenses`). NDot di Nothing non è incluso perché proprietario: per cambiare il font dei titoli basta sostituire `app/src/main/res/font/doto.ttf`.
+
 ## Privacy
 
 Nessun account, nessun permesso Internet, nessun microfono, nessuna accessibilità, nessun log con dati personali. Il backup cloud di Android è escluso (il trasferimento diretto tra telefoni resta possibile); i contenuti delle notifiche sono nascosti sulla schermata di blocco per impostazione predefinita.

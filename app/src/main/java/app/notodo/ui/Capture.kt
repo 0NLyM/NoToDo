@@ -148,6 +148,8 @@ class CaptureViewModel(app: Application, private val handle: SavedStateHandle) :
         private set
     var failed by mutableStateOf(false)
         private set
+    var failure by mutableStateOf<String?>(null)
+        private set
     var resumable by mutableStateOf<Capture?>(null)
         private set
     var settings by mutableStateOf(Settings())
@@ -226,10 +228,12 @@ class CaptureViewModel(app: Application, private val handle: SavedStateHandle) :
         runCatching { withContext(Dispatchers.Default) { a.parser.parse(t, ctx) } }
             .onSuccess { parsed ->
                 failed = false
+                failure = null
                 drafts = parsed.filter { it.source !in discarded }.map { d -> edited[d.source]?.copy(start = d.start, end = d.end) ?: d }
             }
             .onFailure {
                 failed = true
+                failure = it.toString().take(160)
                 drafts = emptyList()
             }
     }
@@ -402,7 +406,7 @@ private fun Status(vm: CaptureViewModel, withAlerts: Boolean) {
     val red = MaterialTheme.colorScheme.primary
     val small = MaterialTheme.typography.bodySmall
     when {
-        vm.failed -> Text("Analisi non riuscita: il testo verrà salvato integro in Inbox", color = red, style = small)
+        vm.failed -> Text("Analisi non riuscita: il testo verrà salvato integro in Inbox\n${vm.failure.orEmpty()}", color = red, style = small)
         vm.text.isBlank() -> Text("Esempio: «domani alle 9 chiama Luca; idea: supporto 3D per la scrivania»", color = MaterialTheme.colorScheme.onSurfaceVariant, style = small)
         vm.drafts.isNotEmpty() && vm.drafts.none { it.recognized } -> Text("Non riconosciuto: resterà in Inbox da elaborare", color = red, style = small)
         else -> Row(verticalAlignment = Alignment.CenterVertically) {

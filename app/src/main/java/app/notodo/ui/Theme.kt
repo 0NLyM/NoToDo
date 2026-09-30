@@ -20,11 +20,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.notodo.R
 import app.notodo.parse.Kind
 
 private val Light = lightColorScheme(
@@ -63,16 +67,32 @@ private val Dark = darkColorScheme(
 
 val Mono = FontFamily.Monospace
 
+/** Testo: Geist (OFL), variabile. */
+val Geist = FontFamily(
+    listOf(400, 500, 600, 700).map { w -> Font(R.font.geist, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w))) },
+)
+
+/** Titoli: Doto (OFL), matrice di punti. */
+val Dots = FontFamily(Font(R.font.doto, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))))
+
+private val typography = Typography().run {
+    fun TextStyle.body() = copy(fontFamily = Geist)
+    fun TextStyle.title() = copy(fontFamily = Dots, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.sp)
+    Typography(
+        displayLarge = displayLarge.title(), displayMedium = displayMedium.title(), displaySmall = displaySmall.title(),
+        headlineLarge = headlineLarge.title(), headlineMedium = headlineMedium.title(), headlineSmall = headlineSmall.title(),
+        titleLarge = titleLarge.title(),
+        titleMedium = titleMedium.body().copy(fontWeight = FontWeight.SemiBold), titleSmall = titleSmall.body(),
+        bodyLarge = bodyLarge.body(), bodyMedium = bodyMedium.body(), bodySmall = bodySmall.body(),
+        labelLarge = labelLarge.body(), labelMedium = labelMedium.body(), labelSmall = labelSmall.body(),
+    )
+}
+
 @Composable
 fun NoToDoTheme(content: @Composable () -> Unit) {
-    val base = Typography()
     MaterialTheme(
         colorScheme = if (isSystemInDarkTheme()) Dark else Light,
-        typography = base.copy(
-            headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
-            headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-            titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        ),
+        typography = typography,
         shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp), large = RoundedCornerShape(24.dp)),
         content = content,
     )
