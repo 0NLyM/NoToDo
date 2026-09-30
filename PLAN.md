@@ -1,5 +1,10 @@
 # PLAN — NoToDo (second brain Android)
 
+## Stato (30/09/2026)
+- Slice A, B, C implementate; 70 test automatici verdi (vedi README › Test automatici).
+- Lint senza errori (resta solo l'avviso voluto `OldTargetApi`); build debug e release (R8) compilano.
+- Nessuna prova su hardware: la sezione «Da verificare su hardware» qui sotto è ancora tutta aperta.
+
 ## Stato di partenza (verificato)
 - Repository vuoto (nessun commit): progetto inizializzato da zero.
 - Ambiente di sviluppo: JDK 21, Gradle 9.8.0 (wrapper), Android SDK installato a mano (platform 36/37, build-tools 36/37).
