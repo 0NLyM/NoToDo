@@ -31,8 +31,8 @@
         android:id="@+id/late"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="6dp"
-        android:text="●"
+        android:layout_marginStart="6dp"
+        android:text="@string/widget_late"
         android:textColor="@color/accent"
         android:textSize="11sp"
         android:visibility="gone" />

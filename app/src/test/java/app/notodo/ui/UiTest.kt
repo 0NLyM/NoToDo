@@ -9,7 +9,9 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -85,6 +87,34 @@ class CaptureUiTest {
         assertEquals(0, runBlocking { app.repo.inbox.first().size })
     }
 
+    @Test fun `unisci, rianalizza e separa dalle card`() {
+        type("domani chiama Luca; porta il cavo")
+        assertEquals(2, rule.onAllNodesWithContentDescription("Scarta").fetchSemanticsNodes().size)
+        rule.onAllNodesWithContentDescription("Azioni")[0].performClick()
+        rule.onNodeWithText("Unisci con il successivo").performClick()
+        rule.settle()
+        assertEquals(1, rule.onAllNodesWithContentDescription("Scarta").fetchSemanticsNodes().size)
+        rule.onNodeWithText("Chiama Luca; porta il cavo").assertExists()
+        rule.onNodeWithText("Rianalizza").performClick()
+        rule.settle()
+        assertEquals(2, rule.onAllNodesWithContentDescription("Scarta").fetchSemanticsNodes().size)
+    }
+
+    @Test fun `separa una frase con due azioni`() {
+        type("chiama Luca e manda la mail a Rossi")
+        rule.onNodeWithContentDescription("Azioni").performClick()
+        rule.onNodeWithText("Separa").performClick()
+        rule.settle()
+        rule.onNodeWithText("Chiama Luca").assertExists()
+        rule.onNodeWithText("Manda la mail a Rossi").assertExists()
+    }
+
+    @Test fun `chiusura immediata dopo la digitazione non perde il testo`() {
+        rule.onNode(hasSetTextAction()).performTextInput("chiama il tecnico della caldaia")
+        rule.activityRule.scenario.close() // prima che scada il debounce della bozza
+        rule.until { runBlocking { app.repo.inbox.first().any { it.text == "chiama il tecnico della caldaia" } } }
+    }
+
     @Test fun `testo non riconosciuto resta integro in Inbox`() {
         type("asdf qwer zxcv")
         rule.onNodeWithText("Salva").performClick()
@@ -106,6 +136,31 @@ class CaptureUiTest {
         rule.until { toast() != null }
         assertEquals("Analisi non riuscita: testo salvato in Inbox", toast())
         assertEquals(listOf("domani alle 9 chiama Luca"), runBlocking { app.repo.inbox.first().map { it.text } })
+    }
+}
+
+/**
+ * Configurazione schermo di default: con w412dp-xxhdpi Robolectric non raggiunge mai l'idle
+ * se un qualsiasi campo di testo (anche BasicTextField) sta in un Dialog. Limite dell'ambiente di test.
+ */
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class EditorUiTest {
+    @get:Rule val rule = createAndroidComposeRule<CaptureActivity>()
+
+    @Test fun `correggi apre l'editor della card`() {
+        rule.onNode(hasSetTextAction()).performTextInput("alle 3 riavvia il NAS")
+        rule.settle()
+        rule.until { rule.onAllNodesWithText("Riavvia il NAS").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Riavvia il NAS").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Correggi").assertExists()
+        rule.shot("correggi")
+        rule.onNodeWithText("Idea").performClick()
+        rule.onNodeWithText("Applica").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("IDEA").assertExists()
+        rule.onNodeWithText("Ora ambigua", substring = true).assertDoesNotExist() // correzione manuale = confermato
     }
 }
 
@@ -150,6 +205,22 @@ abstract class ScreensTest(private val prefix: String) {
             rule.until { runBlocking { app.repo.inbox.first().any { it.text.startsWith("Venerdì") } } }
             rule.settle()
             rule.shot("$prefix-cattura-dubbi")
+        }
+        val id = runBlocking { app.repo.items.first().first { it.title == "Chiamare Rossi" }.id }
+        ActivityScenario.launch<MainActivity>(MainActivity.open(app, id)).use {
+            rule.until { rule.onAllNodesWithText("Testo originale", substring = true, ignoreCase = true).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithText("Chiamare Rossi").assertExists()
+        }
+        ActivityScenario.launch<MainActivity>(MainActivity.openView(app, View.TODAY)).use {
+            rule.settle()
+            rule.onNodeWithContentDescription("Impostazioni").performClick()
+            rule.settle()
+            rule.shot("$prefix-impostazioni")
+        }
+        ActivityScenario.launch<SnoozeActivity>(SnoozeActivity.intent(app, id)).use {
+            rule.until { rule.onAllNodesWithText("Chiamare Rossi").fetchSemanticsNodes().isNotEmpty() }
+            rule.settle()
+            rule.shot("$prefix-rimanda")
         }
     }
 }

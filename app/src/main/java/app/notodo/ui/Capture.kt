@@ -63,6 +63,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
@@ -165,6 +166,12 @@ class CaptureViewModel(app: Application, private val handle: SavedStateHandle) :
     }
 
     private fun newId() = UUID.randomUUID().toString().also { handle[KEY_ID] = it }
+
+    /** Chiusura entro il debounce: l'ultimo testo si salva comunque, fuori dal ciclo di vita della schermata. */
+    override fun onCleared() {
+        val (i, t, src, z) = listOf(id, text, source, settings.zone)
+        a.scope.launch { a.repo.saveDraft(i, t, src, java.time.ZoneId.of(z)) }
+    }
 
     fun start(captureId: String?, prefill: String?, source: String) {
         viewModelScope.launch {
@@ -382,7 +389,11 @@ fun CaptureScreen(vm: CaptureViewModel, close: () -> Unit) {
             vm.message = null
         }
     }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(Unit) {
+        focus.requestFocus()
+        keyboard?.show()
+    }
 }
 
 @Composable
