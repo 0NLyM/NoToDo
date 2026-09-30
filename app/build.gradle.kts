@@ -31,7 +31,11 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
         // Robolectric con SDK 36 accede a FileDescriptor interni del JDK
-        unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED") }
+        unitTests.all {
+            it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED")
+            // Una JVM per classe: i singleton delle librerie non si portano dietro l'Application di un test precedente.
+            it.forkEvery = 1
+        }
     }
 }
 

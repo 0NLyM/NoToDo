@@ -78,7 +78,7 @@ class Repo(
     }
 
     /** Snooze: silenzia gli avvisi fino a [until] e ne manda uno solo allora. La scadenza non cambia. */
-    suspend fun snooze(id: String, until: Long) = edit(id, "avviso rimandato", { _, _ -> "a ${stamp(until)}" }) {
+    suspend fun snooze(id: String, until: Long) = edit(id, "avviso rimandato", { old, _ -> "a ${stamp(until, ZoneId.of(old.zone))}" }) {
         it.copy(snoozeUntil = until, firedUpTo = until - 1)
     }
 
@@ -96,7 +96,8 @@ class Repo(
             dao.due(t).map { old ->
                 old.copy(firedUpTo = t).derived().also {
                     dao.upsert(it)
-                    log(old.id, "avviso inviato", "previsto ${stamp(old.nextAlertAt!!)}, inviato ${stamp(t)}")
+                    val z = ZoneId.of(old.zone)
+                    log(old.id, "avviso inviato", "previsto ${stamp(old.nextAlertAt!!, z)}, inviato ${stamp(t, z)}")
                 }
             }
         }
@@ -143,7 +144,7 @@ class Repo(
     suspend fun exportMarkdown(): String = buildString {
         val items = dao.allItems().sortedWith(compareBy({ it.done }, { it.at ?: Long.MAX_VALUE }, { it.createdAt }))
         val captures = dao.allCaptures().associateBy { it.id }
-        appendLine("# NoToDo — export ${stamp(clock())}")
+        appendLine("# NoToDo — export ${stamp(clock(), ZoneId.systemDefault())}")
         val inbox = captures.values.filter { !it.processed }
         if (inbox.isNotEmpty()) {
             appendLine("\n## Inbox da elaborare\n")
@@ -155,7 +156,7 @@ class Repo(
             appendLine("\n## ${k.label}\n")
             list.forEach { i ->
                 val meta = listOfNotNull(
-                    i.at?.let { stamp(it, i.precision == app.notodo.parse.Precision.DAY) },
+                    i.at?.let { stamp(it, ZoneId.of(i.zone), i.precision == app.notodo.parse.Precision.DAY) },
                     i.alerts.takeIf { it.isNotEmpty() }?.joinToString(", ") { app.notodo.parse.Alerts.label(it) }?.let { "avvisi: $it" },
                     i.people.takeIf { it.isNotEmpty() }?.joinToString(", "),
                     i.tags.takeIf { it.isNotEmpty() }?.joinToString(" ") { "#$it" },
@@ -171,13 +172,13 @@ class Repo(
         private val json = Json { prettyPrint = true; ignoreUnknownKeys = true; encodeDefaults = true }
         private val STAMP = DateTimeFormatter.ofPattern("EEE d MMM yyyy HH:mm", Locale.ITALIAN)
         private val DAY = DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.ITALIAN)
-        fun stamp(ms: Long, day: Boolean = false): String = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).let { (if (day) DAY else STAMP).format(it) }
+        fun stamp(ms: Long, zone: ZoneId, day: Boolean = false): String = Instant.ofEpochMilli(ms).atZone(zone).let { (if (day) DAY else STAMP).format(it) }
 
         fun diff(a: Item, b: Item): String = listOfNotNull(
             "tipo ${a.kind.label} → ${b.kind.label}".takeIf { a.kind != b.kind },
             "titolo «${a.title}» → «${b.title}»".takeIf { a.title != b.title },
             "dettagli modificati".takeIf { a.body != b.body },
-            "data ${a.at?.let { stamp(it) } ?: "nessuna"} → ${b.at?.let { stamp(it) } ?: "nessuna"}".takeIf { a.at != b.at || a.precision != b.precision },
+            "data ${a.at?.let { stamp(it, ZoneId.of(a.zone), a.precision == app.notodo.parse.Precision.DAY) } ?: "nessuna"} → ${b.at?.let { stamp(it, ZoneId.of(b.zone), b.precision == app.notodo.parse.Precision.DAY) } ?: "nessuna"}".takeIf { a.at != b.at || a.precision != b.precision },
             "avvisi ${a.alerts} → ${b.alerts}".takeIf { a.alerts != b.alerts },
             "tag ${a.tags} → ${b.tags}".takeIf { a.tags != b.tags },
             "persone ${a.people} → ${b.people}".takeIf { a.people != b.people },

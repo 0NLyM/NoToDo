@@ -29,7 +29,12 @@ import app.notodo.parse.Kind
 
 private val Light = lightColorScheme(
     primary = Color(0xFFC8102E), onPrimary = Color.White,
+    primaryContainer = Color(0xFFF8DADF), onPrimaryContainer = Color(0xFF4A000D),
     secondary = Color(0xFF111111), onSecondary = Color.White,
+    secondaryContainer = Color(0xFF111111), onSecondaryContainer = Color.White,
+    tertiary = Color(0xFF111111), onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFE6E6E3), onTertiaryContainer = Color(0xFF111111),
+    surfaceTint = Color.Transparent,
     background = Color(0xFFF5F5F3), onBackground = Color(0xFF111111),
     surface = Color(0xFFFFFFFF), onSurface = Color(0xFF111111),
     surfaceVariant = Color(0xFFEDEDEA), onSurfaceVariant = Color(0xFF555555),
@@ -41,7 +46,12 @@ private val Light = lightColorScheme(
 
 private val Dark = darkColorScheme(
     primary = Color(0xFFFF5A5F), onPrimary = Color.Black,
+    primaryContainer = Color(0xFF4A1015), onPrimaryContainer = Color(0xFFFFDADC),
     secondary = Color(0xFFF2F2F2), onSecondary = Color.Black,
+    secondaryContainer = Color(0xFFF2F2F2), onSecondaryContainer = Color.Black,
+    tertiary = Color(0xFFF2F2F2), onTertiary = Color.Black,
+    tertiaryContainer = Color(0xFF2A2A2A), onTertiaryContainer = Color(0xFFF2F2F2),
+    surfaceTint = Color.Transparent,
     background = Color(0xFF0A0A0A), onBackground = Color(0xFFF2F2F2),
     surface = Color(0xFF141414), onSurface = Color(0xFFF2F2F2),
     surfaceVariant = Color(0xFF1E1E1E), onSurfaceVariant = Color(0xFFABABAB),

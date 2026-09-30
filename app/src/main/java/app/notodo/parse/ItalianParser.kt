@@ -326,7 +326,10 @@ private class Analysis(val text: String, val ctx: ParseContext) {
                 if (a.toLocalTime() != time) doubts += Doubt("Le ${hm(time)} non esistono quel giorno (cambio d'ora): ${hm(a.toLocalTime())}")
                 else if (zone.rules.getValidOffsets(LocalDateTime.of(res.date, time)).size > 1) doubts += Doubt("Le ${hm(time)} si ripetono (cambio d'ora): usata la prima")
             }
-            sched.alt?.let { alt -> doubts += Doubt("Ora ambigua: ${hm(a.toLocalTime())} o ${hm(alt)}?", zdt(a.toLocalDate(), alt)) }
+            sched.alt?.let { alt ->
+                val other = zdt(a.toLocalDate(), alt).let { if (res == null && !it.isAfter(ctx.now)) it.plusDays(1) else it }
+                doubts += Doubt("Ora ambigua: ${hm(a.toLocalTime())} o ${hm(alt)}?", other)
+            }
             if (sched.part != null && sched.approx && time != null) doubts += Doubt("Orario dedotto da «${sched.part}»: ≈ ${hm(time)}")
             if (sched.recurring) doubts += Doubt("Ricorrenza non supportata: impostata solo la prossima data")
             val gone = if (precision == Precision.DAY) a.toLocalDate() < today else a.isBefore(ctx.now)

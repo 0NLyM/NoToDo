@@ -86,14 +86,14 @@ fun DetailScreen(vm: MainViewModel, id: String, settings: Settings, now: ZonedDa
                 TextButton(onClick = { moving = true }) { Text(if (i.at == null) "Aggiungi data" else "Sposta scadenza") }
             }
             if (i.alerts.isNotEmpty()) Text("Avvisi: " + i.alerts.joinToString(" · ") { Alerts.label(it) }, style = small)
-            i.nextAlertAt?.let { Text("Prossimo avviso: ${Repo.stamp(it)}", fontFamily = Mono, fontSize = 12.sp, color = scheme.onSurfaceVariant) }
-            i.snoozeUntil?.takeIf { it > now.toInstant().toEpochMilli() }?.let { Text("Rimandato a ${Repo.stamp(it)} (la scadenza resta invariata)", style = small) }
+            i.nextAlertAt?.let { Text("Prossimo avviso: ${Repo.stamp(it, now.zone)}", fontFamily = Mono, fontSize = 12.sp, color = scheme.onSurfaceVariant) }
+            i.snoozeUntil?.takeIf { it > now.toInstant().toEpochMilli() }?.let { Text("Rimandato a ${Repo.stamp(it, now.zone)} (la scadenza resta invariata)", style = small) }
             val meta = (i.people.map { "@$it" } + i.tags.map { "#$it" }).joinToString("   ")
             if (meta.isNotEmpty()) Text(meta, color = scheme.onSurfaceVariant)
             if (i.body.isNotBlank()) Text(i.body)
             if (i.kind != Kind.NOTE && i.kind != Kind.REFERENCE && i.kind != Kind.IDEA) {
                 if (i.done) OutlinedButton(onClick = { vm.act { setDone(i.id, false) } }) { Text("Riapri") }
-                else Button(onClick = { vm.act { setDone(i.id, true) } }) { Text("Completato") }
+                else Button(onClick = { vm.act { setDone(i.id, true) } }) { Text("Completa") }
             }
 
             Section("Testo originale")
@@ -105,10 +105,10 @@ fun DetailScreen(vm: MainViewModel, id: String, settings: Settings, now: ZonedDa
                     withStyle(SpanStyle(background = scheme.primary.copy(alpha = .14f), fontWeight = FontWeight.Medium)) { append(c.text.substring(s, e)) }
                     append(c.text.substring(e))
                 })
-                Label("Provenienza: ${c.source} · ${Repo.stamp(c.createdAt)} · fuso ${c.zone}")
+                Label("Provenienza: ${c.source} · ${Repo.stamp(c.createdAt, now.zone)} · fuso ${c.zone}")
             } ?: Text("Non disponibile", style = small)
             if (i.mentions.isNotEmpty()) Text("Date menzionate: " + i.mentions.joinToString(", ") { dayLabel(LocalDate.parse(it), now.toLocalDate()) }, style = small)
-            i.dateText?.let { Text("Data letta da: «$it»${i.precision?.let { p -> " · precisione ${p.name.lowercase()}" } ?: ""}", style = small) }
+            i.dateText?.let { Text("Data letta da: «$it»${i.precision?.let { p -> " · precisione ${p.label}" } ?: ""}", style = small) }
 
             Section("Motivi dell'analisi · confidenza ${(i.confidence * 100).toInt()}%")
             i.reasons.forEach { Text("· $it", style = small) }
@@ -124,7 +124,7 @@ fun DetailScreen(vm: MainViewModel, id: String, settings: Settings, now: ZonedDa
             Section("Cronologia")
             audit.forEach { a ->
                 Column {
-                    Text("${Repo.stamp(a.at)} · ${a.action}", fontFamily = Mono, fontSize = 12.sp)
+                    Text("${Repo.stamp(a.at, now.zone)} · ${a.action}", fontFamily = Mono, fontSize = 12.sp)
                     if (a.detail.isNotBlank()) Text(a.detail, style = small, color = scheme.onSurfaceVariant)
                 }
             }

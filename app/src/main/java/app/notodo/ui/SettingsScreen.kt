@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import app.notodo.data.Settings
 import app.notodo.parse.Alerts
@@ -78,7 +79,7 @@ fun SettingsScreen(vm: MainViewModel, s: Settings) {
     var rules by remember { mutableStateOf(s.tagRules) }
     var timeDialog by remember { mutableStateOf<String?>(null) }
 
-    fun toast(msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
+    fun toast(msg: String) = ContextCompat.getMainExecutor(ctx).execute { Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show() }
     fun write(uri: Uri?, content: suspend () -> String) = uri?.let {
         scope.launch {
             runCatching { withContext(Dispatchers.IO) { ctx.contentResolver.openOutputStream(it, "wt")!!.use { o -> o.write(content().toByteArray()) } } }

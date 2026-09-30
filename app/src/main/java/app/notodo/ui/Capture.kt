@@ -22,11 +22,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -305,7 +305,10 @@ fun CaptureScreen(vm: CaptureViewModel, close: () -> Unit) {
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
         close()
     }
-    fun save() = scope.launch { done(vm.save()) }
+    fun save() = scope.launch {
+        val msg = vm.save()
+        withContext(Dispatchers.Main) { done(msg) }
+    }
     val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { save() }
     val withAlerts = vm.drafts.any { it.alerts.isNotEmpty() && it.at != null }
 
@@ -392,7 +395,7 @@ private fun Status(vm: CaptureViewModel, withAlerts: Boolean) {
         vm.text.isBlank() -> Text("Esempio: «domani alle 9 chiama Luca; idea: supporto 3D per la scrivania»", color = MaterialTheme.colorScheme.onSurfaceVariant, style = small)
         vm.drafts.isNotEmpty() && vm.drafts.none { it.recognized } -> Text("Non riconosciuto: resterà in Inbox da elaborare", color = red, style = small)
         else -> Row(verticalAlignment = Alignment.CenterVertically) {
-            Label("${vm.drafts.size} ${if (vm.drafts.size == 1) "elemento" else "elementi"} · anteprima, nulla è ancora salvato", Modifier.weight(1f))
+            Label("${vm.drafts.size} ${if (vm.drafts.size == 1) "elemento" else "elementi"} · da confermare", Modifier.weight(1f))
             if (vm.frozen) TextButton(onClick = { vm.reanalyze() }) { Text("Rianalizza") }
         }
     }
@@ -439,8 +442,8 @@ fun DraftCard(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                TextButton(onClick = { kinds = true }, contentPadding = PaddingValues(horizontal = 0.dp)) { Label(d.kind.label, color = scheme.onSurface) }
+            Box(Modifier.heightIn(min = 48.dp).clickable(onClickLabel = "Cambia tipo") { kinds = true }, contentAlignment = Alignment.CenterStart) {
+                Label(d.kind.label, color = scheme.onSurface)
                 DropdownMenu(kinds, { kinds = false }) {
                     Kind.entries.forEach { k -> DropdownMenuItem(text = { Text(k.label) }, onClick = { onKind(k); kinds = false }) }
                 }

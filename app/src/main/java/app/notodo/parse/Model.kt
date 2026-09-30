@@ -10,7 +10,7 @@ enum class Kind(val label: String) {
 }
 
 /** EXACT = ora esplicita, APPROX = «verso le 16» / «stasera», DAY = solo giorno. */
-enum class Precision { EXACT, APPROX, DAY }
+enum class Precision(val label: String) { EXACT("esatta"), APPROX("approssimata"), DAY("solo giorno") }
 
 /** Campo da confermare; [alternative] è l'altra lettura plausibile, se esiste. */
 data class Doubt(val text: String, val alternative: ZonedDateTime? = null)

@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 class App : Application() {
     val db: Db by lazy { Room.databaseBuilder(this, Db::class.java, "notodo.db").build() }
     val settings by lazy { SettingsStore(this) }
-    val parser: CaptureParser = ItalianParser
+    // Sostituibile: un futuro parser avanzato, o uno guasto nei test.
+    var parser: CaptureParser = ItalianParser
     val repo by lazy {
         Repo(db) {
             Alarms.schedule(this)

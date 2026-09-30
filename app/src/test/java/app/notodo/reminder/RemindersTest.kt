@@ -97,7 +97,12 @@ class RemindersTest {
         val a = save("tra 3 ore chiama Luca")
         app.repo.snooze(a.id, app.repo.clock() - 1) // forza un avviso già dovuto
         AlarmReceiver.fire(app)
-        assertNotNull(shadowOf(nm).getNotification(Notifications.id(a.id)))
+        val n = shadowOf(nm).getNotification(Notifications.id(a.id))
+        assertNotNull(n)
+        assertEquals("Chiama Luca", n.extras.getString(android.app.Notification.EXTRA_TITLE))
+        assertEquals(listOf("Fatto", "+15 min", "Rimanda…"), n.actions.map { it.title.toString() })
+        assertEquals(android.app.Notification.VISIBILITY_PRIVATE, n.visibility)
+        assertEquals("Promemoria NoToDo", n.publicVersion.extras.getString(android.app.Notification.EXTRA_TITLE))
         val next = app.repo.findItem(a.id)!!.nextAlertAt!!
         assertEquals(next, fireAlarms().single().triggerAtMs)
         assertTrue(next > app.repo.clock())
