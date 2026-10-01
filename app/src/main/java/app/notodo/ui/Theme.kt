@@ -1,12 +1,15 @@
 package app.notodo.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
@@ -14,10 +17,16 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -96,12 +105,15 @@ private val typography = Typography().run {
 
 @Composable
 fun NoToDoTheme(content: @Composable () -> Unit) {
+    val scheme = if (isSystemInDarkTheme()) Dark else Light
     MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) Dark else Light,
+        colorScheme = scheme,
         typography = typography,
         shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp), large = RoundedCornerShape(24.dp)),
-        content = content,
-    )
+    ) {
+        // Fuori da una Surface il colore del contenuto di Material è nero: sul tema scuro testo e icone sparirebbero.
+        CompositionLocalProvider(LocalContentColor provides scheme.onSurface, content = content)
+    }
 }
 
 /** Etichetta tecnica: maiuscolo monospace spaziato. */
@@ -118,8 +130,28 @@ val Kind.glyph get() = when (this) {
 }
 
 @Composable
-fun KindGlyph(kind: Kind, modifier: Modifier = Modifier) = Box(
-    modifier.size(28.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+fun KindGlyph(kind: Kind, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.onSurfaceVariant) = Box(
+    modifier.size(28.dp).clip(CircleShape).border(1.dp, color.copy(alpha = .4f), CircleShape)
         .semantics { contentDescription = kind.label },
     contentAlignment = Alignment.Center,
-) { Text(kind.glyph, fontFamily = Mono, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+) { Text(kind.glyph, fontFamily = Mono, fontSize = 13.sp, color = color) }
+
+/** Casella rotonda: anello sottile da vuota, disco pieno con tick fine da spuntata. [hole] è lo sfondo su cui sta, per il tick. */
+@Composable
+fun RoundCheck(checked: Boolean, onChange: (Boolean) -> Unit, color: Color, hole: Color, modifier: Modifier = Modifier) = Box(
+    modifier.size(48.dp).clip(CircleShape).toggleable(checked, role = Role.Checkbox, onValueChange = onChange)
+        .semantics { contentDescription = "Fatto" },
+    contentAlignment = Alignment.Center,
+) {
+    Canvas(Modifier.size(22.dp)) {
+        val w = size.width
+        val ring = 1.5.dp.toPx()
+        if (checked) {
+            drawCircle(color)
+            drawPath(
+                Path().apply { moveTo(.30f * w, .52f * w); lineTo(.44f * w, .66f * w); lineTo(.71f * w, .35f * w) },
+                hole, style = Stroke(1.75.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        } else drawCircle(color, radius = (w - ring) / 2, style = Stroke(ring))
+    }
+}

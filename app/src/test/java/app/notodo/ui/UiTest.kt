@@ -3,9 +3,15 @@ package app.notodo.ui
 import android.Manifest
 import android.graphics.Bitmap
 import android.os.Looper
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -27,6 +33,8 @@ import app.notodo.parse.ParseContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -50,6 +58,13 @@ private fun ComposeTestRule.settle() {
 private fun ComposeTestRule.until(cond: () -> Boolean) = waitUntil(5_000) {
     idleMain()
     cond()
+}
+
+/** Colore con cui è davvero disegnato il testo (quello risolto dal tema, non quello richiesto). */
+private fun ComposeTestRule.textColor(text: String): Color {
+    val out = mutableListOf<TextLayoutResult>()
+    onNode(hasText(text), useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!(out)
+    return out.single().layoutInput.style.color
 }
 
 private fun ComposeTestRule.shot(name: String) {
@@ -168,7 +183,7 @@ class EditorUiTest {
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
-abstract class ScreensTest(private val prefix: String) {
+abstract class ScreensTest(private val prefix: String, private val dark: Boolean) {
     @get:Rule val rule = createEmptyComposeRule()
 
     private fun seed() = runBlocking {
@@ -205,6 +220,7 @@ abstract class ScreensTest(private val prefix: String) {
             rule.until { runBlocking { app.repo.inbox.first().any { it.text.startsWith("Venerdì") } } }
             rule.settle()
             rule.shot("$prefix-cattura-dubbi")
+            assertEquals("titolo della card ($prefix)", dark, rule.textColor("Chiamare Rossi").luminance() > .5f)
         }
         val id = runBlocking { app.repo.items.first().first { it.title == "Chiamare Rossi" }.id }
         ActivityScenario.launch<MainActivity>(MainActivity.open(app, id)).use {
@@ -225,7 +241,49 @@ abstract class ScreensTest(private val prefix: String) {
     }
 }
 
-class LightScreensTest : ScreensTest("chiaro")
+class LightScreensTest : ScreensTest("chiaro", dark = false)
 
 @Config(qualifiers = "w412dp-h915dp-night-xxhdpi")
-class DarkScreensTest : ScreensTest("scuro")
+class DarkScreensTest : ScreensTest("scuro", dark = true)
+
+/** Lista dal basso verso l'alto: il primo elemento sta in basso, in una pillola rossa; la casella lo completa. */
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "w412dp-h915dp-xxhdpi")
+class ListUiTest {
+    @get:Rule val rule = createEmptyComposeRule()
+
+    private fun top(title: String) = rule.onNodeWithText(title).fetchSemanticsNode().boundsInRoot.top
+
+    /** Il bordo destro della riga è vuoto: lì si vede solo lo sfondo, rosso (primary chiaro) se è la pillola. */
+    private fun pill(title: String): Boolean {
+        val r = rule.onNodeWithText(title).fetchSemanticsNode().boundsInRoot
+        val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
+        return bmp.getPixel((r.right - 8).toInt(), r.center.y.toInt()) == 0xFFC8102E.toInt()
+    }
+
+    @Test fun `il primo e' in basso nella pillola rossa e la casella lo completa`() {
+        runBlocking {
+            val s = app.settings.get()
+            val t = "Domani alle 09:00 chiama Luca; domani alle 10:00 chiama Anna"
+            app.repo.confirm("lista", t, "app", s.zoneId, app.parser.parse(t, s.parseContext(app.repo.clock())))
+        }
+        ActivityScenario.launch<MainActivity>(MainActivity.openView(app, View.ALL)).use {
+            rule.until { rule.onAllNodesWithText("Chiama Anna").fetchSemanticsNodes().isNotEmpty() }
+            rule.settle()
+            assertTrue("il primo elemento è il più in basso", top("Chiama Luca") > top("Chiama Anna"))
+            assertTrue(pill("Chiama Luca"))
+            assertFalse(pill("Chiama Anna"))
+            rule.shot("lista")
+
+            val boxes = rule.onAllNodes(isToggleable())
+            assertEquals(2, boxes.fetchSemanticsNodes().size)
+            boxes[boxes.fetchSemanticsNodes().withIndex().maxBy { it.value.boundsInRoot.top }.index].performClick()
+            rule.until { runBlocking { app.repo.items.first().first { it.title == "Chiama Luca" }.done } }
+            rule.settle()
+            assertTrue("la pillola passa al successivo", pill("Chiama Anna"))
+            assertFalse(pill("Chiama Luca"))
+            rule.shot("lista-fatto")
+        }
+    }
+}

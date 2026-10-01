@@ -37,7 +37,7 @@ Build (JDK 17+, Android SDK con platform 37):
 
 ```sh
 ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
-./gradlew testDebugUnitTest      # 70 test
+./gradlew testDebugUnitTest      # 71 test
 ```
 
 Installazione via USB:
@@ -170,7 +170,7 @@ app/src/main/java/app/notodo/
 
 ## Test automatici
 
-`./gradlew testDebugUnitTest` — 70 test, tutti verdi nell'ultima esecuzione (JVM + Robolectric, SDK 36):
+`./gradlew testDebugUnitTest` — 71 test, tutti verdi nell'ultima esecuzione (JVM + Robolectric, SDK 36):
 
 | Classe | Test | Cosa copre |
 |---|---|---|
@@ -182,7 +182,8 @@ app/src/main/java/app/notodo/
 | `DigestTest` | 2 | riepilogo solo se utile, una sola riscoperta per periodo |
 | `IntegrationTest` | 3 | manifest dell'assistente accettato da `VoiceInteractionServiceInfo`, intent MacroDroid/condivisione/deep link, permessi minimi |
 | `CaptureUiTest`, `EditorUiTest` | 7 | salvataggio multiplo, Inbox (non riconosciuto e parser guasto), chiusura immediata, Unisci/Rianalizza/Separa, Correggi |
-| `LightScreensTest`, `DarkScreensTest`, `WidgetTest` | 4 | navigazione e screenshot in `app/build/screenshots/` |
+| `ListUiTest` | 1 | lista dal basso, primo elemento nella pillola rossa (pixel), casella rotonda che completa e sposta la pillola |
+| `LightScreensTest`, `DarkScreensTest`, `WidgetTest` | 4 | navigazione, screenshot in `app/build/screenshots/`, colore reale del testo del popup di cattura (leggibile sul tema scuro) |
 
 Limiti dei test: nessuna interfaccia di sistema reale (tasto power, SystemUI, IME, Doze), allarmi verificati su `ShadowAlarmManager`. In Robolectric un campo di testo dentro un dialog non raggiunge mai l'idle alla configurazione 412dp/xxhdpi, quindi il test dell'editor gira alla configurazione di default.
 

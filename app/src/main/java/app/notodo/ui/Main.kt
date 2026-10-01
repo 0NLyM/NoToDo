@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,7 +35,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
@@ -50,12 +50,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -209,10 +211,13 @@ private fun ListScreen(vm: MainViewModel, settings: Settings, now: ZonedDateTime
         Box(Modifier.weight(1f)) {
             if (vm.view == View.INBOX && !searching) InboxList(inbox, now) { vm.act { deleteDraft(it) } }
             else if (visible.isEmpty()) Empty(if (searching || vm.filter.active) "Nessun risultato" else "Niente qui. Tocca + per catturare.")
-            else LazyColumn(Modifier.fillMaxSize()) {
-                items(visible, key = { it.id }) { i ->
-                    ItemRow(i, now, onOpen = { vm.open(i.id) }, onToggle = { vm.act { setDone(i.id, !i.done) } })
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            else key(vm.view) { // cambiando vista si riparte dal primo elemento, in basso
+                LazyColumn(Modifier.fillMaxSize(), reverseLayout = true) {
+                    itemsIndexed(visible, key = { _, i -> i.id }) { n, i ->
+                        ItemRow(i, now, onOpen = { vm.open(i.id) }, onToggle = { vm.act { setDone(i.id, !i.done) } }, first = n == 0)
+                        // a lista rovesciata il divisore finisce sopra la riga: niente accanto alla pillola né in cima
+                        if (n > 0 && n < visible.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
                 }
             }
         }
@@ -252,17 +257,25 @@ fun Empty(text: String) = Box(Modifier.fillMaxSize().padding(32.dp), contentAlig
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
+/** [first]: il primo della lista (in basso sullo schermo) è in evidenza, in una pillola rossa larga quanto la riga. */
 @Composable
-fun ItemRow(i: Item, now: ZonedDateTime, onOpen: () -> Unit, onToggle: () -> Unit) {
+fun ItemRow(i: Item, now: ZonedDateTime, onOpen: () -> Unit, onToggle: () -> Unit, first: Boolean = false) {
     val late = i.overdue(now)
     val scheme = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (i.kind == Kind.TASK || i.kind == Kind.VERIFY) Checkbox(i.done, { onToggle() })
-        else Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { KindGlyph(i.kind) }
+    val text = if (first) scheme.onPrimary else scheme.onSurface
+    val quiet = if (first) scheme.onPrimary.copy(alpha = .9f) else scheme.onSurfaceVariant
+    Row(
+        Modifier.fillMaxWidth()
+            .then(if (first) Modifier.padding(horizontal = 8.dp, vertical = 4.dp).clip(CircleShape).background(scheme.primary) else Modifier)
+            .clickable(onClick = onOpen).padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (i.kind == Kind.TASK || i.kind == Kind.VERIFY) RoundCheck(i.done, { onToggle() }, color = if (i.done) quiet else text, hole = if (first) scheme.primary else scheme.background)
+        else Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { KindGlyph(i.kind, color = quiet) }
         Column(Modifier.weight(1f).padding(start = 4.dp, end = 8.dp)) {
             Text(
                 i.title, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                color = if (i.done) scheme.onSurfaceVariant else scheme.onSurface,
+                color = if (i.done) quiet else text,
                 textDecoration = if (i.done) TextDecoration.LineThrough else null,
             )
             val meta = listOfNotNull(
@@ -271,9 +284,9 @@ fun ItemRow(i: Item, now: ZonedDateTime, onOpen: () -> Unit, onToggle: () -> Uni
                 i.people.joinToString(", ").ifEmpty { null },
                 i.tags.joinToString(" ") { "#$it" }.ifEmpty { null },
             ).joinToString(" · ")
-            if (meta.isNotEmpty()) Text(meta, fontFamily = Mono, fontSize = 12.sp, color = if (late) scheme.primary else scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (meta.isNotEmpty()) Text(meta, fontFamily = Mono, fontSize = 12.sp, color = if (late && !first) scheme.primary else quiet, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (late) Dot(Modifier.padding(end = 8.dp))
+        if (late) Dot(Modifier.padding(end = 8.dp), color = if (first) text else scheme.primary)
     }
 }
 
@@ -282,7 +295,7 @@ private fun InboxList(inbox: List<Capture>, now: ZonedDateTime, onDelete: (Strin
     val ctx = LocalContext.current
     var confirm by remember { mutableStateOf<Capture?>(null) }
     if (inbox.isEmpty()) return Empty("Inbox vuota: ogni cattura non elaborata finisce qui, integra.")
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), reverseLayout = true) {
         items(inbox, key = { it.id }) { c ->
             Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 12.dp)) {
                 Text(c.text, maxLines = 4, overflow = TextOverflow.Ellipsis)

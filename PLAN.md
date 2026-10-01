@@ -1,7 +1,7 @@
 # PLAN — NoToDo (second brain Android)
 
 ## Stato (30/09/2026)
-- Slice A, B, C implementate; 70 test automatici verdi (vedi README › Test automatici).
+- Slice A, B, C implementate; 71 test automatici verdi (vedi README › Test automatici).
 - Lint senza errori (resta solo l'avviso voluto `OldTargetApi`); build debug e release (R8) compilano.
 - Nessuna prova su hardware: la sezione «Da verificare su hardware» qui sotto è ancora tutta aperta.
 
